@@ -100,9 +100,9 @@ class FacturaeItem {
       'charges' => []
     ];
 
-    $quantity = $fac->pad($this->quantity, 'Item/Quantity');
-    $unitPriceWithoutTax = $fac->pad($this->unitPriceWithoutTax, 'Item/UnitPriceWithoutTax');
-    $totalAmountWithoutTax = $fac->pad($quantity * $unitPriceWithoutTax, 'Item/TotalAmountWithoutTax');
+    $quantity = $this->quantity;
+    $unitPriceWithoutTax = $this->unitPriceWithoutTax;
+    $totalAmountWithoutTax = $quantity * $unitPriceWithoutTax;
     $grossAmount = $totalAmountWithoutTax;
 
     // Process charges and discounts
@@ -110,13 +110,12 @@ class FacturaeItem {
       $factor = ($i == 0) ? -1 : 1;
       foreach ($this->{$groupTag} as $group) {
         if (isset($group['rate'])) {
-          $rate = $fac->pad($group['rate'], 'Discount/Rate');
+          $rate = $group['rate'];
           $amount = $totalAmountWithoutTax * ($rate / 100);
         } else {
           $rate = null;
           $amount = $group['amount'];
         }
-        $amount = $fac->pad($amount, 'Discount/Amount');
         $addProps[$groupTag][] = array(
           "reason" => $group['reason'],
           "rate" => $rate,
@@ -131,11 +130,10 @@ class FacturaeItem {
     $totalTaxesWithheld = 0;
     foreach (['taxesOutputs', 'taxesWithheld'] as $i=>$taxesGroup) {
       foreach ($this->{$taxesGroup} as $type=>$tax) {
-        $taxRate = $fac->pad($tax['rate'], 'Tax/Rate');
+        $taxRate = $tax['rate'];
         $taxAmount = $grossAmount * ($taxRate / 100);
-        $taxAmount = $fac->pad($taxAmount, 'Tax/Amount');
         $addProps[$taxesGroup][$type] = array(
-          "base" => $fac->pad($grossAmount, 'Tax/Base'),
+          "base" => $grossAmount,
           "rate" => $taxRate,
           "amount" => $taxAmount
         );
@@ -151,7 +149,7 @@ class FacturaeItem {
     $addProps['quantity'] = $quantity;
     $addProps['unitPriceWithoutTax'] = $unitPriceWithoutTax;
     $addProps['totalAmountWithoutTax'] = $totalAmountWithoutTax;
-    $addProps['grossAmount'] = $fac->pad($grossAmount, 'Item/GrossAmount');
+    $addProps['grossAmount'] = $grossAmount;
     $addProps['totalTaxesOutputs'] = $totalTaxesOutputs;
     $addProps['totalTaxesWithheld'] = $totalTaxesWithheld;
     return array_merge(get_object_vars($this), $addProps);
